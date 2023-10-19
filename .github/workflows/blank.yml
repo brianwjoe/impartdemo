@@ -1,4 +1,4 @@
-name: Run Impart Security OAS Analysis
+name: Find Open API Specs, update them, and analyze them for vulnerabilities
 
 on:
   push:
@@ -8,23 +8,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  spec-update:
+  scan-and-update:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      - name: Update specification
-        run: npx @impart-security/impart-cli specs update --specId {YOUR_SPEC_ID} --specPath {PATH_TO_SPEC_FILE} --force
-        env:
-          IMPART_ACCESS_TOKEN: ${{ secrets.SPEC_UPDATE_TOKEN }}
-          
-      - name: Lint specification
-        run: npx @impart-security/impart-cli specs lint --specId {YOUR_SPEC_ID} --failSeverity warn --format pretty
+      # Step 1: Scan for OpenAPI Specification files
+      - name: Scan for OpenAPI files
+        id: scan
+        run: |
+          FILES=$(find . -name '*.yaml' -o -name '*.json' | xargs grep -l "openapi" || true)
+          echo "Found OpenAPI files: $FILES"
+          echo "OPENAPI_FILES=$FILES" >> $GITHUB_ENV
+
+      # Step 2: Run spec update and lint jobs on found OpenAPI files
+      - name: Run Spec Update and Lint
+        if: env.OPENAPI_FILES != ''
+        run: |
+          for FILE in $OPENAPI_FILES; do
+            echo "Processing $FILE"
+            npx @impart-security/impart-cli specs update --specPath $FILE --force
+            npx @impart-security/impart-cli specs lint --specPath $FILE --failSeverity warn --format pretty
+          done
         env:
           IMPART_ACCESS_TOKEN: ${{ secrets.SPEC_UPDATE_TOKEN }}
