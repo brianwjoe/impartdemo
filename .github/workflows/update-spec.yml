@@ -1,0 +1,14 @@
+jobs:
+  spec-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Update specification
+        run: npx @impart-security/impart-cli specs update --specId {YOUR_SPEC_ID} --specPath {PATH_TO_SPEC_FILE} --force
+        env:
+          IMPART_ACCESS_TOKEN: ${{ secrets.SPEC_UPDATE_TOKEN }}
