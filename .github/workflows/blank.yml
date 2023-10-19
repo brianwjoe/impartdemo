@@ -1,4 +1,4 @@
-name: CI
+name: Run Impart Security OAS Analysis
 
 on:
   push:
