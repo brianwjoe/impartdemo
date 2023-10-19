@@ -1,39 +1,30 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "spec-update"
   spec-update:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout code
         uses: actions/checkout@v3
 
-      # Setup Node.js environment
       - name: setup node
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      # Run spec update using your custom CLI
       - name: Update specification
         run: npx @impart-security/impart-cli specs update --specId {YOUR_SPEC_ID} --specPath {PATH_TO_SPEC_FILE} --force
+        env:
+          IMPART_ACCESS_TOKEN: ${{ secrets.SPEC_UPDATE_TOKEN }}
+          
+      - name: Lint specification
+        run: npx @impart-security/impart-cli specs lint --specId {YOUR_SPEC_ID} --failSeverity warn --format pretty
         env:
           IMPART_ACCESS_TOKEN: ${{ secrets.SPEC_UPDATE_TOKEN }}
